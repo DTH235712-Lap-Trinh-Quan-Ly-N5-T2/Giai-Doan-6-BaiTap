@@ -81,6 +81,7 @@
             // 
             // btnNhap
             // 
+            btnNhap.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold);
             btnNhap.Location = new Point(1038, 77);
             btnNhap.Name = "btnNhap";
             btnNhap.Size = new Size(94, 29);
@@ -91,6 +92,7 @@
             // 
             // btnXuat
             // 
+            btnXuat.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold);
             btnXuat.Location = new Point(1038, 125);
             btnXuat.Name = "btnXuat";
             btnXuat.Size = new Size(94, 29);
@@ -105,7 +107,7 @@
             btnTiemKiem.Name = "btnTiemKiem";
             btnTiemKiem.Size = new Size(94, 29);
             btnTiemKiem.TabIndex = 14;
-            btnTiemKiem.Text = "Tiềm Kiếm";
+            btnTiemKiem.Text = "Tìm Kiếm";
             btnTiemKiem.UseVisualStyleBackColor = true;
             btnTiemKiem.Click += btnTiemKiem_Click;
             // 

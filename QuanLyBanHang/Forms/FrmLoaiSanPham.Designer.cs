@@ -29,8 +29,6 @@
         private void InitializeComponent()
         {
             groupBox1 = new GroupBox();
-            btnXuat = new Button();
-            btnNhap = new Button();
             btnThoat = new Button();
             btnHuyBo = new Button();
             btnXoa = new Button();
@@ -43,6 +41,8 @@
             dgvLoaiSanPham = new DataGridView();
             ID = new DataGridViewTextBoxColumn();
             TenLoai = new DataGridViewTextBoxColumn();
+            btnNhap = new Button();
+            btnXuat = new Button();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvLoaiSanPham).BeginInit();
@@ -67,43 +67,20 @@
             groupBox1.TabStop = false;
             groupBox1.Text = "Thông tin loại sản phầm";
             // 
-            // btnXuat
-            // 
-            btnXuat.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            btnXuat.Location = new Point(1083, 78);
-            btnXuat.Name = "btnXuat";
-            btnXuat.Size = new Size(94, 29);
-            btnXuat.TabIndex = 5;
-            btnXuat.Text = "Xuất";
-            btnXuat.UseVisualStyleBackColor = true;
-            btnXuat.Click += btnXuat_Click;
-            // 
-            // btnNhap
-            // 
-            btnNhap.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            btnNhap.Location = new Point(953, 78);
-            btnNhap.Name = "btnNhap";
-            btnNhap.Size = new Size(94, 29);
-            btnNhap.TabIndex = 4;
-            btnNhap.Text = "Nhập…";
-            btnNhap.UseVisualStyleBackColor = true;
-            btnNhap.Click += btnNhap_Click;
-            // 
             // btnThoat
             // 
             btnThoat.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            btnThoat.Location = new Point(823, 78);
+            btnThoat.Location = new Point(697, 74);
             btnThoat.Name = "btnThoat";
             btnThoat.Size = new Size(94, 29);
             btnThoat.TabIndex = 3;
             btnThoat.Text = "Thoát";
             btnThoat.UseVisualStyleBackColor = true;
-            btnThoat.Click += btnThoat_Click;
             // 
             // btnHuyBo
             // 
             btnHuyBo.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            btnHuyBo.Location = new Point(693, 78);
+            btnHuyBo.Location = new Point(579, 74);
             btnHuyBo.Name = "btnHuyBo";
             btnHuyBo.Size = new Size(94, 29);
             btnHuyBo.TabIndex = 3;
@@ -115,7 +92,7 @@
             // 
             btnXoa.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             btnXoa.ForeColor = Color.Red;
-            btnXoa.Location = new Point(563, 78);
+            btnXoa.Location = new Point(448, 74);
             btnXoa.Name = "btnXoa";
             btnXoa.Size = new Size(94, 29);
             btnXoa.TabIndex = 3;
@@ -126,7 +103,7 @@
             // btnSua
             // 
             btnSua.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            btnSua.Location = new Point(433, 78);
+            btnSua.Location = new Point(307, 74);
             btnSua.Name = "btnSua";
             btnSua.Size = new Size(94, 29);
             btnSua.TabIndex = 3;
@@ -138,7 +115,7 @@
             // 
             btnLuu.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             btnLuu.ForeColor = Color.Blue;
-            btnLuu.Location = new Point(303, 78);
+            btnLuu.Location = new Point(156, 74);
             btnLuu.Name = "btnLuu";
             btnLuu.Size = new Size(94, 29);
             btnLuu.TabIndex = 3;
@@ -149,7 +126,7 @@
             // btnThem
             // 
             btnThem.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            btnThem.Location = new Point(173, 78);
+            btnThem.Location = new Point(28, 74);
             btnThem.Name = "btnThem";
             btnThem.Size = new Size(94, 29);
             btnThem.TabIndex = 2;
@@ -215,6 +192,28 @@
             TenLoai.MinimumWidth = 6;
             TenLoai.Name = "TenLoai";
             TenLoai.ReadOnly = true;
+            // 
+            // btnNhap
+            // 
+            btnNhap.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnNhap.Location = new Point(839, 74);
+            btnNhap.Name = "btnNhap";
+            btnNhap.Size = new Size(94, 29);
+            btnNhap.TabIndex = 4;
+            btnNhap.Text = "Nhập";
+            btnNhap.UseVisualStyleBackColor = true;
+            btnNhap.Click += btnNhap_Click;
+            // 
+            // btnXuat
+            // 
+            btnXuat.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnXuat.Location = new Point(954, 73);
+            btnXuat.Name = "btnXuat";
+            btnXuat.Size = new Size(94, 29);
+            btnXuat.TabIndex = 4;
+            btnXuat.Text = "Xuất";
+            btnXuat.UseVisualStyleBackColor = true;
+            btnXuat.Click += btnXuat_Click;
             // 
             // FrmLoaiSanPham
             // 

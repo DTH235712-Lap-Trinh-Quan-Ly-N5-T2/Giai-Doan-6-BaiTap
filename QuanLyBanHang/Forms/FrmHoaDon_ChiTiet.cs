@@ -1,5 +1,4 @@
-﻿using QuanLyBanHang.Data;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -9,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Drawing.Printing;
+using QuanLyBanHang.Data;
 
 namespace QuanLyBanHang.Forms
 {
@@ -249,101 +248,127 @@ namespace QuanLyBanHang.Forms
 
         private void btnInHoaDon_Click(object sender, EventArgs e)
         {
-            // Kiểm tra xem đã có sản phẩm nào để in chưa
-            if (hoaDonChiTiet.Count == 0)
+           
+            if (dataGridView1.CurrentRow != null)
             {
-                MessageBox.Show("Hóa đơn trống, không thể in!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                // Khởi tạo đối tượng in
+                PrintDocument pdHoaDon = new PrintDocument();
+                // Gắn sự kiện vẽ giao diện hóa đơn
+                pdHoaDon.PrintPage += new PrintPageEventHandler(pdHoaDon_PrintPage);
+
+                // Khởi tạo hộp thoại xem trước bản in (Print Preview)
+                PrintPreviewDialog previewDialog = new PrintPreviewDialog();
+                previewDialog.Document = pdHoaDon;
+
+                // Mở hộp thoại xem trước ở chế độ toàn màn hình cho dễ nhìn
+                ((Form)previewDialog).WindowState = FormWindowState.Maximized;
+                previewDialog.ShowDialog();
             }
-
-            // Khởi tạo đối tượng in
-            PrintDocument pd = new PrintDocument();
-            pd.PrintPage += new PrintPageEventHandler(pd_PrintPageFromForm);
-
-            // Mở hộp thoại xem trước
-            PrintPreviewDialog preview = new PrintPreviewDialog();
-            preview.Document = pd;
-            ((Form)preview).WindowState = FormWindowState.Maximized;
-            preview.ShowDialog();
+            else
+            {
+                MessageBox.Show("Vui lòng chọn một hóa đơn để in.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
-
-        private void pd_PrintPageFromForm(object sender, PrintPageEventArgs e)
+        private void pdHoaDon_PrintPage(object sender, PrintPageEventArgs e)
         {
-            Graphics g = e.Graphics;
-            Font fontTitle = new Font("Courier New", 18, FontStyle.Bold);
-            Font fontHeader = new Font("Courier New", 12, FontStyle.Bold);
-            Font fontBody = new Font("Courier New", 10, FontStyle.Regular);
-            Font fontItalic = new Font("Courier New", 10, FontStyle.Italic);
-            Brush brush = Brushes.Black;
+            // 1. Lấy mã hóa đơn đang được chọn trên lưới (Sử dụng cột "cotID" của bạn)
+            int maHoaDon = Convert.ToInt32(dataGridView1.CurrentRow.Cells["SanPhamID"].Value.ToString());
 
-            int y = 20;
-            int margin = 20;
-
-            // --- HEADER ---
-            g.DrawString("CỬA HÀNG THIẾT BỊ IT TRẦN TRÍ NHÂN", fontHeader, brush, margin, y);
-            y += 25;
-            g.DrawString("Địa chỉ: Đại học An Giang, TP. Long Xuyên", fontBody, brush, margin, y);
-            y += 40;
-
-            string title = "HÓA ĐƠN BÁN HÀNG (BẢN TẠM)";
-            g.DrawString(title, fontTitle, brush, (e.PageBounds.Width - g.MeasureString(title, fontTitle).Width) / 2, y);
-            y += 40;
-
-            // --- THÔNG TIN CHUNG (Lấy trực tiếp từ ComboBox/TextBox) ---
-            g.DrawString($"Ngày lập  : {DateTime.Now:dd/MM/yyyy HH:mm}", fontBody, brush, margin, y);
-            y += 20;
-            g.DrawString($"Thu ngân  : {cboNhanVien.Text}", fontBody, brush, margin, y);
-            y += 20;
-            g.DrawString($"Khách hàng: {cboKhachHang.Text}", fontBody, brush, margin, y);
-            y += 30;
-
-            // Kẻ đường ngang
-            g.DrawString(new string('-', 85), fontBody, brush, margin, y);
-            y += 20;
-
-            // --- TIÊU ĐỀ BẢNG ---
-            g.DrawString("Tên Sản Phẩm", fontHeader, brush, margin, y);
-            g.DrawString("SL", fontHeader, brush, margin + 350, y);
-            g.DrawString("Đơn Giá", fontHeader, brush, margin + 450, y);
-            g.DrawString("Thành Tiền", fontHeader, brush, margin + 620, y);
-            y += 25;
-            g.DrawString(new string('-', 85), fontBody, brush, margin, y);
-            y += 20;
-
-            // --- CHI TIẾT SẢN PHẨM (Duyệt qua BindingList hoaDonChiTiet) ---
-            double tongTien = 0;
-            foreach (var item in hoaDonChiTiet)
+            using (var db = new QLBHDbContext())
             {
-                string tenSP = item.TenSanPham;
-                if (tenSP.Length > 35) tenSP = tenSP.Substring(0, 35) + "...";
+                // 2. Lấy thông tin hóa đơn, nhân viên, khách hàng và danh sách sản phẩm
+                var hoaDon = db.HoaDon.Find(maHoaDon);
+                if (hoaDon == null) return;
 
-                g.DrawString(tenSP, fontBody, brush, margin, y);
-                g.DrawString(item.SoLuongBan.ToString(), fontBody, brush, margin + 350, y);
-                g.DrawString(item.DonGiaBan.ToString("N0"), fontBody, brush, margin + 450, y);
-                g.DrawString(item.ThanhTien.ToString("N0"), fontBody, brush, margin + 620, y);
+                var khachHang = db.KhachHang.Find(hoaDon.KhachHangID);
+                var nhanVien = db.NhanVien.Find(hoaDon.NhanVienID);
+                var lstChiTiet = db.HoaDon_ChiTiet.Where(ct => ct.HoaDonID == maHoaDon).ToList();
 
-                tongTien += item.ThanhTien;
+                // 3. Cấu hình Font chữ và cọ vẽ (Dùng font Courier New monospaced giống máy in bill)
+                Graphics g = e.Graphics;
+                Font fontTitle = new Font("Courier New", 18, FontStyle.Bold);
+                Font fontHeader = new Font("Courier New", 12, FontStyle.Bold);
+                Font fontBody = new Font("Courier New", 10, FontStyle.Regular);
+                Font fontItalic = new Font("Courier New", 10, FontStyle.Italic);
+                Brush brush = Brushes.Black;
+
+                int y = 20; // Tọa độ Y (chiều dọc) bắt đầu
+                int margin = 20; // Lề trái
+
+                // --- PHẦN HEADER (Thông tin cửa hàng) ---
+                g.DrawString("CỬA HÀNG THIẾT BỊ IT VÕ VĂN TỶ", fontHeader, brush, margin, y);
                 y += 25;
-            }
+                g.DrawString("Địa chỉ: Đại học An Giang, TP. Long Xuyên", fontBody, brush, margin, y);
+                y += 40;
 
-            y += 10;
-            g.DrawString(new string('-', 85), fontBody, brush, margin, y);
-            y += 25;
+                string title = "HÓA ĐƠN BÁN HÀNG";
+                SizeF titleSize = g.MeasureString(title, fontTitle);
+                g.DrawString(title, fontTitle, brush, (e.PageBounds.Width - titleSize.Width) / 2, y); // Căn giữa tiêu đề
+                y += 40;
 
-            // --- TỔNG CỘNG ---
-            g.DrawString("TỔNG CỘNG:", fontHeader, brush, margin + 450, y);
-            g.DrawString(tongTien.ToString("N0") + " VNĐ", fontHeader, brush, margin + 620, y);
-            y += 40;
-
-            // --- FOOTER ---
-            if (!string.IsNullOrEmpty(txtGhiChuHoaDon.Text))
-            {
-                g.DrawString($"Ghi chú: {txtGhiChuHoaDon.Text}", fontItalic, brush, margin, y);
+                // --- PHẦN THÔNG TIN CHUNG (Phiếu, ngày, nhân viên...) ---
+                g.DrawString($"Số HĐ     : {hoaDon.ID}", fontBody, brush, margin, y);
+                y += 20;
+                g.DrawString($"Ngày lập  : {hoaDon.NgayLap:dd/MM/yyyy HH:mm}", fontBody, brush, margin, y);
+                y += 20;
+                g.DrawString($"Thu ngân  : {nhanVien?.HoVaTen}", fontBody, brush, margin, y);
+                y += 20;
+                g.DrawString($"Khách hàng: {khachHang?.HoVaTen}", fontBody, brush, margin, y);
                 y += 30;
-            }
 
-            string footer = "Cảm ơn quý khách & Hẹn gặp lại!";
-            g.DrawString(footer, fontItalic, brush, (e.PageBounds.Width - g.MeasureString(footer, fontItalic).Width) / 2, y);
+                // Vẽ đường gạch đứt ngang phân cách
+                g.DrawString(new string('-', 85), fontBody, brush, margin, y);
+                y += 20;
+
+                // --- PHẦN TIÊU ĐỀ BẢNG SẢN PHẨM ---
+                g.DrawString("Tên Sản Phẩm", fontHeader, brush, margin, y);
+                g.DrawString("SL", fontHeader, brush, margin + 350, y);
+                g.DrawString("Đơn Giá", fontHeader, brush, margin + 450, y);
+                g.DrawString("Thành Tiền", fontHeader, brush, margin + 620, y);
+                y += 25;
+                g.DrawString(new string('-', 85), fontBody, brush, margin, y);
+                y += 20;
+
+                // --- PHẦN DANH SÁCH CHI TIẾT SẢN PHẨM ---
+                double tongTien = 0;
+                foreach (var ct in lstChiTiet)
+                {
+                    var sp = db.SanPham.Find(ct.SanPhamID);
+                    string tenSP = sp != null ? sp.TenSanPham : "SP không xác định";
+
+                    // Rút gọn tên SP nếu quá dài để không bị lẹm sang cột Số lượng
+                    if (tenSP.Length > 35) tenSP = tenSP.Substring(0, 35) + "...";
+
+                    double thanhTien = ct.SoLuongBan * ct.DonGiaBan;
+                    tongTien += thanhTien;
+
+                    // In từng dòng dữ liệu theo các mốc tọa độ cột tương ứng
+                    g.DrawString(tenSP, fontBody, brush, margin, y);
+                    g.DrawString(ct.SoLuongBan.ToString(), fontBody, brush, margin + 350, y);
+                    g.DrawString(ct.DonGiaBan.ToString("N0"), fontBody, brush, margin + 450, y);
+                    g.DrawString(thanhTien.ToString("N0"), fontBody, brush, margin + 620, y);
+                    y += 25;
+                }
+
+                g.DrawString(new string('-', 85), fontBody, brush, margin, y);
+                y += 25;
+
+                // --- PHẦN TỔNG CỘNG ---
+                g.DrawString("TỔNG CỘNG:", fontHeader, brush, margin + 450, y);
+                g.DrawString(tongTien.ToString("N0") + " VNĐ", fontHeader, brush, margin + 620, y);
+                y += 40;
+
+                // --- GHI CHÚ VÀ LỜI CẢM ƠN ---
+                if (!string.IsNullOrEmpty(hoaDon.GhiChuHoaDon))
+                {
+                    g.DrawString($"Ghi chú: {hoaDon.GhiChuHoaDon}", fontItalic, brush, margin, y);
+                    y += 30;
+                }
+
+                string footer = "Cảm ơn quý khách & Hẹn gặp lại!";
+                SizeF footerSize = g.MeasureString(footer, fontItalic);
+                g.DrawString(footer, fontItalic, brush, (e.PageBounds.Width - footerSize.Width) / 2, y); // Căn giữa
+            }
         }
     }
 }

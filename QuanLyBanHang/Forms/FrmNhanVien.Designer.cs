@@ -267,6 +267,7 @@
             // 
             // btnNhap
             // 
+            btnNhap.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold);
             btnNhap.Location = new Point(1042, 87);
             btnNhap.Name = "btnNhap";
             btnNhap.Size = new Size(94, 29);
@@ -277,6 +278,7 @@
             // 
             // btnXuat
             // 
+            btnXuat.Font = new Font("Segoe UI", 10.2F, FontStyle.Bold);
             btnXuat.Location = new Point(1042, 135);
             btnXuat.Name = "btnXuat";
             btnXuat.Size = new Size(94, 29);

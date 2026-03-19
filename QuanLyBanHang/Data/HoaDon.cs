@@ -1,6 +1,10 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace QuanLyBanHang.Data
 {
@@ -16,7 +20,6 @@ namespace QuanLyBanHang.Data
         public virtual KhachHang KhachHang { get; set; } = null!;
         public virtual NhanVien NhanVien { get; set; } = null!;
     }
-
     [NotMapped]
     public class DanhSachHoaDon
     {

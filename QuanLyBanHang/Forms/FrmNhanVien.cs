@@ -1,7 +1,4 @@
-﻿using ClosedXML.Excel;
-using DocumentFormat.OpenXml.Drawing;
-using QuanLyBanHang.Data;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -11,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using BC = BCrypt.Net.BCrypt;
+using QuanLyBanHang.Data;
 using ClosedXML.Excel;
 
 namespace QuanLyBanHang.Forms
@@ -188,15 +186,14 @@ namespace QuanLyBanHang.Forms
                 try
                 {
                     DataTable table = new DataTable();
-                    bool firstRow = true; // KHAI BÁO Ở ĐÂY để không bị lỗi context
-
                     using (XLWorkbook workbook = new XLWorkbook(openFileDialog.FileName))
                     {
                         IXLWorksheet worksheet = workbook.Worksheet(1);
+                        bool firstRow = true;
                         string readRange = "1:1";
-
                         foreach (IXLRow row in worksheet.RowsUsed())
                         {
+                            // Đọc dòng tiêu đề (dòng đầu tiên) 
                             if (firstRow)
                             {
                                 readRange = string.Format("{0}:{1}", 1, row.LastCellUsed().Address.ColumnNumber);
@@ -204,7 +201,7 @@ namespace QuanLyBanHang.Forms
                                     table.Columns.Add(cell.Value.ToString());
                                 firstRow = false;
                             }
-                            else
+                            else // Đọc các dòng nội dung (các dòng tiếp theo) 
                             {
                                 table.Rows.Add();
                                 int cellIndex = 0;
@@ -215,46 +212,47 @@ namespace QuanLyBanHang.Forms
                                 }
                             }
                         }
-                    } // Kết thúc using
-
-                    // Bây giờ biến firstRow đã có thể sử dụng ở đây
-                    if (table.Rows.Count > 0)
-                    {
-                        foreach (DataRow r in table.Rows)
+                        if (table.Rows.Count > 0)
                         {
-                            // Tùy theo form mà bạn đổi Class tương ứng (NhanVien, KhachHang...)
-                            NhanVien nv = new NhanVien();
-                            nv.HoVaTen = r["HoVaTen"].ToString();
-                            nv.DienThoai = r["DienThoai"].ToString();
-                            nv.DiaChi = r["DiaChi"].ToString();
-                            nv.TenDangNhap = r["TenDangNhap"].ToString();
-                            if(table.Columns.Contains("MatKhau") && !string.IsNullOrWhiteSpace(r["MatKhau"].ToString()))
+                            foreach (DataRow r in table.Rows)
                             {
-                                nv.MatKhau = BC.HashPassword(r["MatKhau"].ToString());
-                            }
-                            else
-                            {
-                                nv.MatKhau = BC.HashPassword("123456");
-                            }
-                            string quyen = r["QuyenHan"].ToString().ToLower().Trim();
-                            nv.QuyenHan = (quyen == "true " || quyen == "1" || quyen == "quản trị");
+                                NhanVien nv = new NhanVien();
 
-                            context.NhanVien.Add(nv);
+                                nv.HoVaTen = r["HoVaTen"].ToString();
+                                nv.DienThoai = r["DienThoai"].ToString();
+                                nv.DiaChi = r["DiaChi"].ToString();
+                                nv.TenDangNhap = r["TenDangNhap"].ToString();
+
+                                // 1. Xử lý Mật khẩu: Kiểm tra cột MatKhau có tồn tại trong file Excel không
+                                if (table.Columns.Contains("MatKhau") && !string.IsNullOrWhiteSpace(r["MatKhau"].ToString()))
+                                {
+                                    // Nếu có cột và có dữ liệu thì mã hóa mật khẩu đó
+                                    nv.MatKhau = BC.HashPassword(r["MatKhau"].ToString());
+                                }
+                                else
+                                {
+                                    // Nếu không có cột MatKhau (như file vừa xuất ra), gán mật khẩu mặc định là "123456"
+                                    nv.MatKhau = BC.HashPassword("123456");
+                                }
+
+                                // 2. Xử lý Quyền hạn: Nhận diện thêm chữ "quản trị" từ file Excel xuất ra
+                                string quyen = r["QuyenHan"].ToString().ToLower().Trim();
+                                nv.QuyenHan = (quyen == "true" || quyen == "1" || quyen == "quản trị");
+
+                                context.NhanVien.Add(nv);
+                            }
+                            context.SaveChanges();
+
+                            MessageBox.Show("Đã nhập thành công " + table.Rows.Count + " dòng.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            FrmNhanVien_Load(sender, e);
                         }
-                        context.SaveChanges();
-                        MessageBox.Show("Đã nhập thành công " + table.Rows.Count + " dòng.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                        // Gọi lại hàm load của form tương ứng
-                        FrmNhanVien_Load(sender, e);
-                    }
-                    else if (firstRow) // Không còn bị lỗi "does not exist" nữa
-                    {
-                        MessageBox.Show("Tập tin Excel rỗng hoặc không đúng định dạng.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        if (firstRow)
+                            MessageBox.Show("Tập tin Excel rỗng.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Lỗi: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    MessageBox.Show(ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
         }
@@ -264,13 +262,16 @@ namespace QuanLyBanHang.Forms
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.Title = "Xuất dữ liệu ra tập tin Excel";
             saveFileDialog.Filter = "Tập tin Excel|*.xls;*.xlsx";
-            saveFileDialog.FileName = "Nhân viên_" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".xlsx";
+            // Đặt tên file mặc định có kèm ngày tháng hiện tại
+            saveFileDialog.FileName = "NhanVien_" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".xlsx";
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
                     DataTable table = new DataTable();
+
+                    // Khởi tạo các cột (Lưu ý: Không xuất cột Mật khẩu vì lý do bảo mật)
                     table.Columns.AddRange(new DataColumn[] {
                 new DataColumn("ID", typeof(int)),
                 new DataColumn("HoVaTen", typeof(string)),
@@ -280,32 +281,34 @@ namespace QuanLyBanHang.Forms
                 new DataColumn("QuyenHan", typeof(string))
             });
 
-                    var listNhanVien = context.NhanVien.ToList();
-                    foreach (var item in listNhanVien)
+                    var nhanVien = context.NhanVien.ToList();
+                    if (nhanVien != null)
                     {
-                        table.Rows.Add(
-                            item.ID,
-                            item.HoVaTen,
-                            item.DienThoai,
-                            item.DiaChi,
-                            item.TenDangNhap,
-                            item.QuyenHan == true ? "Quản trị" : "Nhân viên"
-                        );
+                        foreach (var nv in nhanVien)
+                        {
+                            // Chuyển kiểu bool thành chữ cho người dùng Excel dễ đọc
+                            string quyen = nv.QuyenHan ? "Quản trị" : "Nhân viên";
+
+                            // Thêm dữ liệu vào dòng (phải truyền đủ 6 cột như đã khai báo)
+                            table.Rows.Add(nv.ID, nv.HoVaTen, nv.DienThoai, nv.DiaChi, nv.TenDangNhap, quyen);
+                        }
                     }
 
                     using (XLWorkbook wb = new XLWorkbook())
                     {
                         var sheet = wb.Worksheets.Add(table, "NhanVien");
-                        sheet.Columns().AdjustToContents(); // Tự động căn chỉnh độ rộng cột [cite: 104]
-                        wb.SaveAs(saveFileDialog.FileName); // Lưu file [cite: 105]
+                        sheet.Columns().AdjustToContents(); // Tự động căn chỉnh độ rộng cột
+                        wb.SaveAs(saveFileDialog.FileName);
+
                         MessageBox.Show("Đã xuất dữ liệu ra tập tin Excel thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Lỗi: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    MessageBox.Show("Lỗi xuất file: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
+
         }
     }
 }

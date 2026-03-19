@@ -139,6 +139,7 @@ namespace QuanLyBanHang.Forms
             openFileDialog.Title = "Nhập dữ liệu từ tập tin Excel";
             openFileDialog.Filter = "Tập tin Excel|*.xls;*.xlsx";
             openFileDialog.Multiselect = false;
+
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 try
@@ -151,7 +152,7 @@ namespace QuanLyBanHang.Forms
                         string readRange = "1:1";
                         foreach (IXLRow row in worksheet.RowsUsed())
                         {
-                            // Đọc dòng tiêu đề (dòng đầu tiên)
+                            // Đọc dòng tiêu đề (dòng đầu tiên) 
                             if (firstRow)
                             {
                                 readRange = string.Format("{0}:{1}", 1, row.LastCellUsed().Address.ColumnNumber);
@@ -159,7 +160,7 @@ namespace QuanLyBanHang.Forms
                                     table.Columns.Add(cell.Value.ToString());
                                 firstRow = false;
                             }
-                            else // Đọc các dòng nội dung (các dòng tiếp theo)
+                            else // Đọc các dòng nội dung (các dòng tiếp theo) 
                             {
                                 table.Rows.Add();
                                 int cellIndex = 0;
@@ -179,6 +180,7 @@ namespace QuanLyBanHang.Forms
                                 context.LoaiSanPham.Add(lsp);
                             }
                             context.SaveChanges();
+
                             MessageBox.Show("Đã nhập thành công " + table.Rows.Count + " dòng.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             FrmLoaiSanPham_Load(sender, e);
                         }
@@ -195,29 +197,36 @@ namespace QuanLyBanHang.Forms
 
         private void btnXuat_Click(object sender, EventArgs e)
         {
+
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.Title = "Xuất dữ liệu ra tập tin Excel";
             saveFileDialog.Filter = "Tập tin Excel|*.xls;*.xlsx";
             saveFileDialog.FileName = "LoaiSanPham_" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".xlsx";
+
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
                     DataTable table = new DataTable();
+
                     table.Columns.AddRange(new DataColumn[2] {
-new DataColumn("ID", typeof(int)),new DataColumn("TenLoai", typeof(string))
-});
+                    new DataColumn("ID", typeof(int)),
+                    new DataColumn("TenLoai", typeof(string))
+   });
+
                     var loaiSanPham = context.LoaiSanPham.ToList();
                     if (loaiSanPham != null)
                     {
                         foreach (var p in loaiSanPham)
                             table.Rows.Add(p.ID, p.TenLoai);
                     }
+
                     using (XLWorkbook wb = new XLWorkbook())
                     {
                         var sheet = wb.Worksheets.Add(table, "LoaiSanPham");
                         sheet.Columns().AdjustToContents();
                         wb.SaveAs(saveFileDialog.FileName);
+
                         MessageBox.Show("Đã xuất dữ liệu ra tập tin Excel thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     }
                 }
@@ -225,17 +234,6 @@ new DataColumn("ID", typeof(int)),new DataColumn("TenLoai", typeof(string))
                 {
                     MessageBox.Show(ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
-            }
-        }
-
-        private void btnThoat_Click(object sender, EventArgs e)
-        {
-            DialogResult result = MessageBox.Show("Bạn có chắc chắn muốn thoát không?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-            // Nếu người dùng chọn Yes thì đóng Form
-            if (result == DialogResult.Yes)
-            {
-                this.Close();
             }
         }
     }

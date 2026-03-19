@@ -7,8 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using QuanLyBanHang.Data;
 using ClosedXML.Excel;
+using QuanLyBanHang.Data;
 
 namespace QuanLyBanHang.Forms
 {
@@ -158,9 +158,9 @@ namespace QuanLyBanHang.Forms
                         IXLWorksheet worksheet = workbook.Worksheet(1);
                         bool firstRow = true;
                         string readRange = "1:1";
-
                         foreach (IXLRow row in worksheet.RowsUsed())
                         {
+                            // Đọc dòng tiêu đề (dòng đầu tiên) 
                             if (firstRow)
                             {
                                 readRange = string.Format("{0}:{1}", 1, row.LastCellUsed().Address.ColumnNumber);
@@ -168,7 +168,7 @@ namespace QuanLyBanHang.Forms
                                     table.Columns.Add(cell.Value.ToString());
                                 firstRow = false;
                             }
-                            else
+                            else // Đọc các dòng nội dung (các dòng tiếp theo) 
                             {
                                 table.Rows.Add();
                                 int cellIndex = 0;
@@ -179,25 +179,25 @@ namespace QuanLyBanHang.Forms
                                 }
                             }
                         }
-
                         if (table.Rows.Count > 0)
                         {
                             foreach (DataRow r in table.Rows)
                             {
                                 KhachHang kh = new KhachHang();
+                                // Thay the tai day
                                 kh.HoVaTen = r["HoVaTen"].ToString();
                                 kh.DienThoai = r["DienThoai"].ToString();
                                 kh.DiaChi = r["DiaChi"].ToString();
                                 context.KhachHang.Add(kh);
+                                
                             }
                             context.SaveChanges();
+
                             MessageBox.Show("Đã nhập thành công " + table.Rows.Count + " dòng.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             FrmKhachHang_Load(sender, e);
                         }
-                        else if (firstRow)
-                        {
+                        if (firstRow)
                             MessageBox.Show("Tập tin Excel rỗng.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        }
                     }
                 }
                 catch (Exception ex)
@@ -212,33 +212,35 @@ namespace QuanLyBanHang.Forms
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.Title = "Xuất dữ liệu ra tập tin Excel";
             saveFileDialog.Filter = "Tập tin Excel|*.xls;*.xlsx";
-            saveFileDialog.FileName = "Khách Hàng_" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".xlsx";
+            saveFileDialog.FileName = "KhachHang_" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".xlsx";
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
                     DataTable table = new DataTable();
-                    // Khai báo các cột cần xuất
-                    table.Columns.AddRange(new DataColumn[4] {
-                new DataColumn("ID", typeof(int)),
-                new DataColumn("HoVaTen", typeof(string)),
-                new DataColumn("DienThoai", typeof(string)),
-                new DataColumn("DiaChi", typeof(string))
-            });
 
-                    var listKhachHang = context.KhachHang.ToList();
-                    foreach (var item in listKhachHang)
+                    table.Columns.AddRange(new DataColumn[4] {
+                    new DataColumn("ID", typeof(int)),
+                    new DataColumn("HoVaTen", typeof(string)),
+                    new DataColumn("DienThoai", typeof(string)),
+                    new DataColumn("DiaChi", typeof (string)),
+   });
+
+                    var khachHang = context.KhachHang.ToList();
+                    if (khachHang != null)
                     {
-                        table.Rows.Add(item.ID, item.HoVaTen, item.DienThoai, item.DiaChi);
+                        foreach (var k in khachHang)
+                            table.Rows.Add(k.ID, k.HoVaTen, k.DienThoai, k.DiaChi);
                     }
 
                     using (XLWorkbook wb = new XLWorkbook())
                     {
                         var sheet = wb.Worksheets.Add(table, "KhachHang");
-                        sheet.Columns().AdjustToContents(); // Tự động căn chỉnh độ rộng cột [cite: 104]
+                        sheet.Columns().AdjustToContents();
                         wb.SaveAs(saveFileDialog.FileName);
-                        MessageBox.Show("Đã xuất dữ liệu ra tập tin Excel thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        MessageBox.Show("Đã xuất dữ liệu ra tập tin Excel thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     }
                 }
                 catch (Exception ex)
@@ -246,6 +248,7 @@ namespace QuanLyBanHang.Forms
                     MessageBox.Show(ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
             }
+
         }
     }
 }

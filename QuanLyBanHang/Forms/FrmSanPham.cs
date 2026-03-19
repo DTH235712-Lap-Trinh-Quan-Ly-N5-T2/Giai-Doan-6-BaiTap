@@ -8,8 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using QuanLyBanHang.Data;
-using ClosedXML.Excel;
 using static QuanLyBanHang.Data.SanPham;
+using ClosedXML.Excel;
+using System.IO;
 
 namespace QuanLyBanHang.Forms
 {
@@ -78,7 +79,7 @@ namespace QuanLyBanHang.Forms
                 TenSanPham = r.TenSanPham,
                 SoLuong = r.SoLuong,
                 DonGia = r.DonGia,
-                MoTa = r.MoTa,
+                MoTa = r.Mota,
                 HinhAnh = r.HinhAnh
             }).ToList();
             BindingSource bindingSource = new BindingSource();
@@ -164,7 +165,7 @@ namespace QuanLyBanHang.Forms
                     sp.TenSanPham = txtTenSanPham.Text;
                     sp.SoLuong = (int)numSoLuong.Value;
                     sp.DonGia = (int)numDonGia.Value;
-                    sp.MoTa = txtMoTa.Text;
+                    sp.Mota = txtMoTa.Text;
 
                     if (!string.IsNullOrEmpty(tenHinhAnh))
                     {
@@ -279,7 +280,7 @@ namespace QuanLyBanHang.Forms
                 string ext = Path.GetExtension(openFileDialog.FileName);
 
                 // Tạo tên file dự kiến sẽ lưu
-                string newFileName = fileName.GenerateSlug() + ext;
+                string newFileName = StringExtensions.GenerateSlug(fileName) + ext;
                 string fileSavePath = Path.Combine(imagesFolder, newFileName);
 
                 // 2. Nếu file đã tồn tại thì BÁO LỖI và DỪNG LẠI
@@ -359,7 +360,7 @@ namespace QuanLyBanHang.Forms
                                 sp.DonGia = Convert.ToInt32(r["DonGia"]);
 
                                 // Kiểm tra an toàn cho cột Mô tả và Hình ảnh (đề phòng file Excel bị thiếu cột)
-                                sp.MoTa = table.Columns.Contains("Mota") ? r["Mota"].ToString() : "";
+                                sp.Mota = table.Columns.Contains("Mota") ? r["Mota"].ToString() : "";
                                 sp.HinhAnh = table.Columns.Contains("HinhAnh") ? r["HinhAnh"].ToString() : "";
 
                                 context.SanPham.Add(sp);
@@ -410,7 +411,7 @@ namespace QuanLyBanHang.Forms
                     {
                         foreach (var sp in sanPham)
                         {
-                            table.Rows.Add(sp.ID, sp.LoaiSanPhamID, sp.HangSanXuatID, sp.TenSanPham, sp.SoLuong, sp.DonGia, sp.MoTa, sp.HinhAnh);
+                            table.Rows.Add(sp.ID, sp.LoaiSanPhamID, sp.HangSanXuatID, sp.TenSanPham, sp.SoLuong, sp.DonGia, sp.Mota, sp.HinhAnh);
                         }
                     }
 

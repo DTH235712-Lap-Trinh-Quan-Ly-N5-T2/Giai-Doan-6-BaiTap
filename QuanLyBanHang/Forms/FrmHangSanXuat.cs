@@ -7,8 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using QuanLyBanHang.Data;
 using ClosedXML.Excel;
+using QuanLyBanHang.Data;
 
 namespace QuanLyBanHang.Forms
 {
@@ -156,9 +156,9 @@ namespace QuanLyBanHang.Forms
                         IXLWorksheet worksheet = workbook.Worksheet(1);
                         bool firstRow = true;
                         string readRange = "1:1";
-
                         foreach (IXLRow row in worksheet.RowsUsed())
                         {
+                            // Đọc dòng tiêu đề (dòng đầu tiên) 
                             if (firstRow)
                             {
                                 readRange = string.Format("{0}:{1}", 1, row.LastCellUsed().Address.ColumnNumber);
@@ -166,7 +166,7 @@ namespace QuanLyBanHang.Forms
                                     table.Columns.Add(cell.Value.ToString());
                                 firstRow = false;
                             }
-                            else
+                            else // Đọc các dòng nội dung (các dòng tiếp theo) 
                             {
                                 table.Rows.Add();
                                 int cellIndex = 0;
@@ -177,23 +177,21 @@ namespace QuanLyBanHang.Forms
                                 }
                             }
                         }
-
                         if (table.Rows.Count > 0)
                         {
                             foreach (DataRow r in table.Rows)
                             {
                                 HangSanXuat hsx = new HangSanXuat();
-                                hsx.TenHangSanXuat = r["TenHangSanXuat"].ToString();
+                                hsx.TenHangSanXuat = r["TenLoai"].ToString();
                                 context.HangSanXuat.Add(hsx);
                             }
                             context.SaveChanges();
+
                             MessageBox.Show("Đã nhập thành công " + table.Rows.Count + " dòng.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             FrmHangSanXuat_Load(sender, e);
                         }
-                        else if (firstRow)
-                        {
+                        if (firstRow)
                             MessageBox.Show("Tập tin Excel rỗng.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                        }
                     }
                 }
                 catch (Exception ex)
@@ -205,25 +203,27 @@ namespace QuanLyBanHang.Forms
 
         private void btnXuat_Click(object sender, EventArgs e)
         {
-
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.Title = "Xuất dữ liệu ra tập tin Excel";
             saveFileDialog.Filter = "Tập tin Excel|*.xls;*.xlsx";
-            saveFileDialog.FileName ="Hàng Sản Xuất_" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".xlsx";
+            saveFileDialog.FileName = "Hang San Xuat_" + DateTime.Now.ToShortDateString().Replace("/", "_") + ".xlsx";
+
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
                     DataTable table = new DataTable();
-                    table.Columns.AddRange(new DataColumn[2] {
-                        new DataColumn("ID", typeof(int)),
-                        new DataColumn("TenHangSanXuat", typeof(string))
-                    });
 
-                    var listHSX = context.HangSanXuat.ToList();
-                    foreach (var item in listHSX)
+                    table.Columns.AddRange(new DataColumn[2] {
+                    new DataColumn("ID", typeof(int)),
+                    new DataColumn("TenHangSanXuat", typeof(string))
+                 });
+
+                    var hangSanXuat = context.HangSanXuat.ToList();
+                    if (hangSanXuat != null)
                     {
-                        table.Rows.Add(item.ID, item.TenHangSanXuat);
+                        foreach (var p in hangSanXuat)
+                            table.Rows.Add(p.ID, p.TenHangSanXuat);
                     }
 
                     using (XLWorkbook wb = new XLWorkbook())
@@ -231,7 +231,8 @@ namespace QuanLyBanHang.Forms
                         var sheet = wb.Worksheets.Add(table, "HangSanXuat");
                         sheet.Columns().AdjustToContents();
                         wb.SaveAs(saveFileDialog.FileName);
-                        MessageBox.Show("Đã xuất dữ liệu ra tập tin Excel thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        MessageBox.Show("Đã xuất dữ liệu ra tập tin Excel thành công.", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     }
                 }
                 catch (Exception ex)
